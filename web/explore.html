@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+    <title>Smart City</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/global.css" rel="stylesheet">
+    <script src="js/utils.js"></script>
+    <style>
+        #snippets{
+            margin-left: 100px;
+            margin-top: 100px;
+        }
+        #tag{
+            margin-left: 10px;
+            margin-top: 100px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="site-wrapper">
+    <div class="site-wrapper-inner">
+        <div class="cover-container">
+            <div class="masthead clearfix">
+                <div class="inner">
+                    <h3 class="masthead-brand">Ghost Rider</h3>
+                    <nav>
+                        <ul class="nav masthead-nav">
+                            <li class="active"><a>Home</a></li>
+                            <li><a href="about.html">About</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="inner cover">
+                <div id="snippets"></div>
+                <div id="tag"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js" ></script>
+<script src="js/utils.js"></script>
+<!--<script src="bootstrap/js/bootstrap.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+<script>
+    parseDate = function(dateStr){
+        fs=dateStr.split("-");
+        map={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+        var d = new Date(fs[2],map.get(fs[1]),fs[0]);
+        return d;
+    }
+    addsnippets=function(){
+        wardId=getParameterByName('wardId');
+        allTags=[];
+        works = [];
+        minCost = Math.pow(10,9);
+        CUTOFF=100;
+        for(var i=0;i<data.length;i++){
+            if(data[i].fields["Ward "]==wardId) {
+                works.push({
+                    desc: data[i].fields["Description Eng"],
+                    status: data[i].fields["Status"],
+                    cost: parseInt(data[i].fields["Estimate Amount"]),
+                    contractor: data[i].fields["Contractor Name"],
+                    endDate: data[i].fields["Work Completion  Time"],
+                    tags: data[i].tags
+                });
+                minCost=Math.min(minCost,parseInt(data[i].fields["Estimate Amount"]));
+            }
+            if(works.length>CUTOFF)
+                break;
+        }
+        works.sort(function(a,b){
+            return a["endDate"]<b["endDate"];
+        });
+        freqs = {};
+        for(var w=0;w<works.length;w++){
+            var color = "red";
+            if(works[w].status=="completed")
+                color = "red";
+            cost = works[w]["cost"];
+            size=50*(1+Math.log(Math.log(cost/minCost)));
+            desc="";
+            desc = works[w]["desc"]+"<br>"+works[w]["contractor"];
+            $("#snippets").append("<img class='img-circle' src='data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==' alt='"+desc+"' width='"+size+"' height='"+size+"'>")
+            for(var i=0;i<works[w]["tags"].length;i++)
+                if(works[w]["tags"][i]!==""){
+                    tag = works[w]["tags"][i].toLowerCase();
+                    if(typeof(freqs[tag])=="undefined")
+                        freqs[tag]=0;
+                    freqs[tag]=freqs[tag]+1;
+                    if(allTags.indexOf(tag)==-1)
+                        allTags.push(tag);
+                }
+        }
+        allTags.sort(function(a,b){
+            return freqs[a]<freqs[b];
+        });
+        for(var i=0;i<allTags.length;i++){
+            $("#tag").append("<div>"+allTags[i]+" : "+freqs[allTags[i]]+"</div>");
+        }
+
+    }
+    $.getJSON("all_work_records.json", function(json) {
+        data=json;
+        addsnippets();
+    });
+</script>
+
+</body>
+</html>

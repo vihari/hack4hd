@@ -1,0 +1,4 @@
+function initAutoComplete(){
+    var input = document.getElementById('area');
+    var searchBox = new google.maps.places.SearchBox(input);
+}
